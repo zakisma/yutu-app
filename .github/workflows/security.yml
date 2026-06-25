@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+# Explicit permissions required for ZAP to create vulnerability issues
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   secrets-scan:
     name: Gitleaks Secrets Scan
@@ -23,11 +28,12 @@ jobs:
     name: Go Static Analysis (gosec)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.25'
+          cache-dependency-path: backend/go.sum
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
@@ -37,7 +43,7 @@ jobs:
     name: Trivy Vulnerability Scanner
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -51,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Prepare Test Environment
         run: cp .env.test .env
