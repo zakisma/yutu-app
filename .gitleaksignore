@@ -1,0 +1,7 @@
+title = "Yutu Gitleaks Ignore Configuration"
+
+[allowlist]
+description = "Allow mock secrets in test environment configuration"
+paths = [
+    '''^\.env\.test$'''
+]

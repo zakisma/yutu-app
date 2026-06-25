@@ -2,9 +2,9 @@ name: DevSecOps Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
 
 jobs:
   secrets-scan:
@@ -27,7 +27,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: '1.25'
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
@@ -45,6 +45,7 @@ jobs:
           ignore-unfixed: true
           format: 'table'
           severity: 'CRITICAL,HIGH'
+
   dast-zap:
     name: OWASP ZAP Dynamic Scan
     runs-on: ubuntu-latest
@@ -52,16 +53,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Prepare Test Environment
+        run: cp .env.test .env
+
       - name: Start Yutu Infrastructure
         run: |
-          docker compose up -d
-          # Wait for the backend API to become fully responsive
-          timeout 60s bash -c 'until curl -s http://localhost:8080 > /dev/null; do sleep 5; done'
+          docker compose up -d db backend
+          timeout 60s bash -c 'until curl -s http://172.17.0.1:8080 > /dev/null; do sleep 5; done'
 
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target: 'http://localhost:8080'
+          target: 'http://172.17.0.1:8080'
           fail_action: false
           cmd_options: '-a'
 
